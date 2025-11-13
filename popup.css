@@ -1,0 +1,466 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    width: 360px;
+    min-height: 500px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+}
+
+.container {
+    background: white;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #e4e4e4;
+    }
+    
+    .container {
+        background: #1a1a1a;
+    }
+    
+    .current-page {
+        background: #2d2d2d;
+        border-bottom-color: #404040;
+    }
+    
+    .url {
+        color: #cccccc;
+    }
+    
+    .stats {
+        background: #2d2d2d;
+        border: 1px solid #404040;
+    }
+    
+    .stat-number {
+        color: #ffffff;
+    }
+    
+    .stat-label {
+        color: #aaaaaa;
+    }
+    
+    .link-item {
+        border-bottom-color: #404040;
+    }
+    
+    .link-url {
+        color: #cccccc;
+    }
+    
+    .link-text {
+        color: #aaaaaa;
+    }
+    
+    .footer {
+        border-top-color: #404040;
+    }
+    
+    .source-link {
+        color: #aaaaaa;
+    }
+    
+    .config-label,
+    .config-checkbox {
+        color: #cccccc;
+    }
+    
+    .config-input {
+        background: #2d2d2d;
+        color: #cccccc;
+        border-color: #404040;
+    }
+    
+    .config-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+    
+    .config-help {
+        color: #aaaaaa;
+    }
+    
+    .link-list::-webkit-scrollbar-track {
+        background: #2d2d2d;
+    }
+    
+    .link-list::-webkit-scrollbar-thumb:hover {
+        background: #777777;
+    }
+    
+    /* Plugin-scan page specific dark mode styles */
+    .results-summary {
+        background: #2d2d2d !important;
+        border: 1px solid #404040 !important;
+        color: #e4e4e4 !important;
+    }
+    
+    /* Table dark mode styles */
+    table {
+        background: #1a1a1a !important;
+        color: #e4e4e4 !important;
+    }
+    
+    thead tr {
+        background: #2d2d2d !important;
+    }
+    
+    th, td {
+        border-color: #404040 !important;
+        color: #e4e4e4 !important;
+    }
+    
+    tbody tr:nth-child(even) {
+        background: #222222 !important;
+    }
+    
+    tbody tr:nth-child(odd) {
+        background: #1a1a1a !important;
+    }
+    
+    /* Override link colors for dark mode */
+    a {
+        color: #4dabf7 !important;
+    }
+    
+    a:hover {
+        color: #74c0fc !important;
+    }
+    
+    /* Status colors remain the same for visibility */
+    .status-working {
+        color: #28a745 !important;
+    }
+    
+    .status-broken {
+        color: #dc3545 !important;
+    }
+    
+    .status-checking {
+        color: #ffc107 !important;
+    }
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.logo {
+    height: 32px;
+    width: auto;
+    margin-top: 8px;
+}
+
+/* Current page info */
+.current-page {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.url {
+    font-size: 13px;
+    color: #495057;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+/* Actions */
+.actions {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.config-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.config-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.config-input {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.config-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.config-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #495057;
+    user-select: none;
+}
+
+.config-checkbox input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.config-help {
+    font-size: 11px;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: -4px;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #28a745;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.loading {
+    display: none;
+    animation: spin 1s linear infinite;
+}
+
+.btn.loading .btn-text {
+    opacity: 0.7;
+}
+
+.btn.loading .loading {
+    display: inline;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Results */
+.results {
+    flex: 1;
+    padding: 0 20px 20px;
+}
+
+.stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: #495057;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* Link list */
+.link-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.link-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.link-item:last-child {
+    border-bottom: none;
+}
+
+.link-status {
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.link-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.link-url {
+    font-size: 12px;
+    color: #495057;
+    word-break: break-all;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.link-text {
+    font-size: 11px;
+    color: #6c757d;
+    font-style: italic;
+    line-height: 1.2;
+}
+
+.status-working {
+    color: #28a745;
+}
+
+.status-broken {
+    color: #dc3545;
+}
+
+.status-checking {
+    color: #ffc107;
+}
+
+/* Footer */
+.footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #e9ecef;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.source-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}
+
+.devkit-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.devkit-link:hover {
+    text-decoration: underline;
+}
+
+/* Scrollbar styling */
+.link-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.link-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.link-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.link-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
