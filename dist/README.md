@@ -2,7 +2,7 @@
 
 A powerful browser extension that helps you check for broken links on any website. This extension bypasses CORS restrictions by performing link checks directly from the user's browser.
 
-Inspired by https://home.snafu.de/tilman/xenulink.html
+Broken link feature inspired by https://home.snafu.de/tilman/xenulink.html
 
 ## Features
 
@@ -61,8 +61,6 @@ The extension requires the following permissions:
 
 - `activeTab`: To access the current webpage for link scanning
 - `tabs`: To manage tab-specific data
-- `scripting`: To inject content scripts
-- `storage`: To remember extension settings
 - `*://*/*`: To perform cross-origin link checks
 
 ## Development
@@ -126,6 +124,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Changelog
+
+### Version 1.0.1 (2025-12-05)
+
+**New Features:**
+- Added real-time broken links display during scan - broken links now appear in a table as they're discovered
+- Max depth input now allows `0` to scan only the current page without following links
+- Added helpful description for max depth setting: "How many levels deep to crawl (0 = only scan this page)"
+
+**Improvements:**
+- Changed default max depth from 2 to 0 for faster, single-page scans by default
+- Fixed progress updates not displaying during scan - stats now update in real-time
+- Improved 403 error handling - automatically retries with GET request if HEAD returns 403
+- Added list of known sites that may return false 403 errors (twitter.com, x.com, facebook.com, linkedin.com, instagram.com)
+
+**Bug Fixes:**
+- Fixed "Could not establish connection" error on extension load
+- Fixed max depth validation to properly accept 0 as a valid value
+- Fixed tab ID detection for progress updates using message sender instead of chrome.tabs.getCurrent()
 
 ---
 

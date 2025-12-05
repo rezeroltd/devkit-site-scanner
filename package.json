@@ -1,6 +1,6 @@
 {
   "name": "devkit-site-scanner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Browser extension for scanning websites by DevKit.free",
   "scripts": {
     "build": "npm run clean && npm run copy-files",
@@ -28,10 +28,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/rezero-consulting/devkit-broken-link-plugin"
+    "url": "https://github.com/rezeroltd/devkit-site-scanner"
   },
   "homepage": "https://devkit.free",
   "bugs": {
-    "url": "https://gitlab.com/rezero-consulting/devkit-broken-link-plugin/issues"
+    "url": "https://github.com/rezeroltd/devkit-site-scanner/issues"
   }
 }

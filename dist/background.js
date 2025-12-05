@@ -3,6 +3,17 @@ class DevKitLinkChecker {
     constructor() {
         this.tabData = new Map(); // Store data per tab
         this.currentScanController = null; // Track current scan for cancellation
+        
+        // Sites known to return 403 for HEAD requests from extensions
+        this.sites403Prone = [
+            'twitter.com',
+            'x.com',
+            'facebook.com',
+            'linkedin.com',
+            'instagram.com',
+            't.co'
+        ];
+        
         this.setupMessageListeners();
         this.setupTabListeners();
     }
@@ -41,7 +52,9 @@ class DevKitLinkChecker {
                     this.getTabData(message.tabId, sendResponse);
                     break;
                 case 'scanAndCheckDomain':
-                    await this.scanAndCheckDomain(message.target, sendResponse, message.mode, message.debug, message.maxDepth, message.scanPagesOnly);
+                    // Get the tab ID from the sender (the plugin-scan page)
+                    const progressTabId = sender.tab ? sender.tab.id : null;
+                    await this.scanAndCheckDomain(message.target, sendResponse, message.mode, message.debug, message.maxDepth, message.scanPagesOnly, progressTabId);
                     break;
                 case 'cancelScan':
                     this.cancelCurrentScan(sendResponse);
@@ -54,9 +67,9 @@ class DevKitLinkChecker {
             sendResponse({ success: false, error: error.message });
         }
     }
-    async scanAndCheckDomain(target, sendResponse, mode = 'broken-links', debug = 'none', maxDepth = 2, scanPagesOnly = true) {
+    async scanAndCheckDomain(target, sendResponse, mode = 'broken-links', debug = 'none', maxDepth = 0, scanPagesOnly = true, progressTabId = null) {
         try {
-            console.log(`[DEBUG] Starting scanAndCheckDomain: target=${target}, mode=${mode}, debug=${debug}`);
+            console.log(`[DEBUG] Starting scanAndCheckDomain: target=${target}, mode=${mode}, debug=${debug}, progressTabId=${progressTabId}`);
             
             // Create abort controller for this scan
             this.currentScanController = new AbortController();
@@ -65,7 +78,7 @@ class DevKitLinkChecker {
             const visited = new Set();
             const results = [];
             const origin = (new URL(target)).origin;
-            const scanDepth = maxDepth || 2; // Use parameter or default to 2
+            const scanDepth = maxDepth ?? 0; // Use parameter or default to 0
             const self = this; // Store reference to class instance
             
             // Global link cache for this scan session
@@ -154,15 +167,15 @@ class DevKitLinkChecker {
                 if (debug === 'verbose') console.log(`[DEBUG] Scanning links on tab ${tab.id}`);
                 
                 // Send progress update for current page being scanned
-                chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: 'scanProgress',
-                            type: 'scanningPage',
-                            url: url
-                        });
-                    }
-                });
+                if (progressTabId) {
+                    chrome.tabs.sendMessage(progressTabId, {
+                        action: 'scanProgress',
+                        type: 'scanningPage',
+                        url: url
+                    }).catch(err => {
+                        if (debug === 'verbose') console.log(`[DEBUG] Failed to send scanningPage message: ${err.message}`);
+                    });
+                }
                 
                 const response = await chrome.tabs.sendMessage(tab.id, { action: 'scanPage', scanPagesOnly: scanPagesOnly });
                 chrome.tabs.remove(tab.id);
@@ -192,7 +205,7 @@ class DevKitLinkChecker {
                 
                 // Check links
                 if (debug === 'verbose') console.log(`[DEBUG] Checking ${response.links?.length || 0} links`);
-                const checkedLinks = await self.performLinkChecking(response.links, debug, url, totalLinksChecked, linkCache, abortSignal);
+                const checkedLinks = await self.performLinkChecking(response.links, debug, url, totalLinksChecked, linkCache, abortSignal, progressTabId);
                 results.push(...checkedLinks);
                 
                 // Update checked count
@@ -209,18 +222,18 @@ class DevKitLinkChecker {
                 
                 // Send progress update after checking this page
                 pagesScanned++;
-                chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: 'scanProgress',
-                            type: 'pageComplete',
-                            pagesScanned: pagesScanned,
-                            totalPages: totalPagesToScan,
-                            linksFound: totalLinksFound,
-                            linksChecked: totalLinksChecked
-                        });
-                    }
-                });
+                if (progressTabId) {
+                    chrome.tabs.sendMessage(progressTabId, {
+                        action: 'scanProgress',
+                        type: 'pageComplete',
+                        pagesScanned: pagesScanned,
+                        totalPages: totalPagesToScan,
+                        linksFound: totalLinksFound,
+                        linksChecked: totalLinksChecked
+                    }).catch(err => {
+                        if (debug === 'verbose') console.log(`[DEBUG] Failed to send pageComplete message: ${err.message}`);
+                    });
+                }
                 
                 // Recursively scan internal links
                 for (const link of checkedLinks) {
@@ -321,7 +334,7 @@ class DevKitLinkChecker {
         }
     }
     
-    async performLinkChecking(links, debug = 'none', pageUrl = '', currentCheckedCount = 0, linkCache = null, abortSignal = null) {
+    async performLinkChecking(links, debug = 'none', pageUrl = '', currentCheckedCount = 0, linkCache = null, abortSignal = null, progressTabId = null) {
         if (debug === 'verbose') console.log(`[DEBUG] performLinkChecking called with ${links?.length || 0} links`);
         
         const batchSize = 10; // Increased from 5 to 10 for better performance
@@ -336,16 +349,16 @@ class DevKitLinkChecker {
         let newLinksChecked = 0; // Track only newly checked links
         
         // Send initial progress update
-        chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-            if (tabs.length > 0) {
-                chrome.tabs.sendMessage(tabs[0].id, {
-                    action: 'scanProgress',
-                    type: 'progress',
-                    checked: checkedCount,
-                    total: results.length + currentCheckedCount
-                });
-            }
-        });
+        if (progressTabId) {
+            chrome.tabs.sendMessage(progressTabId, {
+                action: 'scanProgress',
+                type: 'progress',
+                checked: checkedCount,
+                total: results.length
+            }).catch(err => {
+                if (debug === 'verbose') console.log(`[DEBUG] Failed to send progress message: ${err.message}`);
+            });
+        }
         
         for (let i = 0; i < results.length; i += batchSize) {
             // Check if scan was cancelled
@@ -374,30 +387,30 @@ class DevKitLinkChecker {
                     link.cached = true; // Mark as cached
                     
                     // Send cached result update
-                    chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                        if (tabs.length > 0) {
-                            chrome.tabs.sendMessage(tabs[0].id, {
-                                action: 'scanProgress',
-                                type: 'cached',
-                                url: link.url,
-                                status: link.status
-                            });
-                        }
-                    });
+                    if (progressTabId) {
+                        chrome.tabs.sendMessage(progressTabId, {
+                            action: 'scanProgress',
+                            type: 'cached',
+                            url: link.url,
+                            status: link.status
+                        }).catch(err => {
+                            if (debug === 'verbose') console.log(`[DEBUG] Failed to send cached message: ${err.message}`);
+                        });
+                    }
                     
                     return link;
                 }
                 
                 // Send "checking" update for this link
-                chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: 'scanProgress',
-                            type: 'checking',
-                            url: link.url
-                        });
-                    }
-                });
+                if (progressTabId) {
+                    chrome.tabs.sendMessage(progressTabId, {
+                        action: 'scanProgress',
+                        type: 'checking',
+                        url: link.url
+                    }).catch(err => {
+                        if (debug === 'verbose') console.log(`[DEBUG] Failed to send checking message: ${err.message}`);
+                    });
+                }
                 
                 const result = await this.checkSingleLink(link, debug);
                 
@@ -412,31 +425,34 @@ class DevKitLinkChecker {
                 }
                 
                 // Send result update
-                chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: 'scanProgress',
-                            type: 'result',
-                            url: link.url,
-                            status: result.status
-                        });
-                    }
-                });
+                if (progressTabId) {
+                    chrome.tabs.sendMessage(progressTabId, {
+                        action: 'scanProgress',
+                        type: 'result',
+                        url: link.url,
+                        status: result.status,
+                        statusCode: result.statusCode,
+                        foundOnPage: link.foundOnPage,
+                        linkType: link.type
+                    }).catch(err => {
+                        if (debug === 'verbose') console.log(`[DEBUG] Failed to send result message: ${err.message}`);
+                    });
+                }
                 
                 checkedCount++;
                 newLinksChecked++;
                 
                 // Send progress update
-                chrome.tabs.query({ url: 'https://devkit.free/plugin-scan/*' }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: 'scanProgress',
-                            type: 'progress',
-                            checked: checkedCount,
-                            total: results.length + currentCheckedCount
-                        });
-                    }
-                });
+                if (progressTabId) {
+                    chrome.tabs.sendMessage(progressTabId, {
+                        action: 'scanProgress',
+                        type: 'progress',
+                        checked: checkedCount,
+                        total: results.length + currentCheckedCount
+                    }).catch(err => {
+                        if (debug === 'verbose') console.log(`[DEBUG] Failed to send progress update: ${err.message}`);
+                    });
+                }
                 
                 return result;
             });
@@ -490,6 +506,30 @@ class DevKitLinkChecker {
         try {
             if (debug === 'verbose') console.log(`[DEBUG] Trying HEAD request for ${url}`);
             const headResult = await this.fetchWithTimeout(url, { method: 'HEAD' }, debug);
+            
+            // If HEAD returns 403, try GET request before marking as broken
+            if (headResult.status === 403) {
+                if (debug === 'verbose') console.log(`[DEBUG] HEAD returned 403, trying GET for ${url}`);
+                try {
+                    const getResult = await this.fetchWithTimeout(url, { method: 'GET' }, debug);
+                    const result = {
+                        working: getResult.ok,
+                        statusCode: getResult.status,
+                        error: getResult.ok ? null : `HTTP ${getResult.status}`
+                    };
+                    if (debug === 'verbose') console.log(`[DEBUG] GET result after 403: ${result.working} (${result.statusCode})`);
+                    return result;
+                } catch (getError) {
+                    if (debug === 'verbose') console.log(`[DEBUG] GET failed after 403: ${getError.message}`);
+                    // Return the original 403 result
+                    return {
+                        working: false,
+                        statusCode: 403,
+                        error: 'HTTP 403'
+                    };
+                }
+            }
+            
             const result = {
                 working: headResult.ok,
                 statusCode: headResult.status,
