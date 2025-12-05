@@ -8,7 +8,7 @@
     const target = params.get('target');
     const mode = params.get('mode') || 'broken-links';
     const debug = params.get('debug') || 'none';
-    const maxDepth = parseInt(params.get('maxdepth')) || 2;
+    const maxDepth = params.has('maxdepth') ? parseInt(params.get('maxdepth')) : 0;
     const scanPagesOnly = params.get('pagesonly') !== 'false'; // Default to true
 
     if (!target) {
@@ -362,6 +362,9 @@
     // Mark scan as in progress and show cancel button
     isScanning = true;
     showCancelButton(true);
+    
+    // Initialize the stats display
+    updateStats();
 
     // Listen for progress updates from background script
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

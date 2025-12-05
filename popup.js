@@ -146,12 +146,12 @@ class LinkCheckerPopup {
             const maxDepthInput = document.getElementById('max-depth-input');
             const scanPagesOnlyCheckbox = document.getElementById('scan-pages-only');
             
-            const maxDepth = parseInt(maxDepthInput.value) || 2;
+            const maxDepth = parseInt(maxDepthInput.value);
             const scanPagesOnly = scanPagesOnlyCheckbox.checked;
             
-            // Validate max depth
-            if (isNaN(maxDepth) || maxDepth < 1) {
-                this.showMessage('Maximum depth must be a number 1 or greater');
+            // Validate max depth (allow 0 or greater)
+            if (isNaN(maxDepth) || maxDepth < 0) {
+                this.showMessage('Maximum depth must be a number 0 or greater');
                 this.isScanning = false;
                 this.setLoadingState('check-btn', false);
                 return;

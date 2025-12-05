@@ -247,10 +247,12 @@ header h1 {
 }
 
 .config-help {
+    display: block;
     font-size: 11px;
     color: #6c757d;
     font-style: italic;
-    margin-top: -4px;
+    margin-top: 4px;
+    line-height: 1.4;
 }
 
 .btn {

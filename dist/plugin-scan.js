@@ -8,7 +8,7 @@
     const target = params.get('target');
     const mode = params.get('mode') || 'broken-links';
     const debug = params.get('debug') || 'none';
-    const maxDepth = parseInt(params.get('maxdepth')) || 2;
+    const maxDepth = params.has('maxdepth') ? parseInt(params.get('maxdepth')) : 0;
     const scanPagesOnly = params.get('pagesonly') !== 'false'; // Default to true
 
     if (!target) {
@@ -17,7 +17,7 @@
     }
 
     // Show loading UI with progress indicators
-    document.body.innerHTML = `<div style='text-align:center; margin:20px 0;'><a href='https://devkit.free' target='_blank' style='text-decoration:none;'><img src='${chrome.runtime.getURL('devkit-logo.svg')}' alt='DevKit' style='max-width:200px; height:auto;'></a></div><div style='text-align:center; margin:10px 0; font-size:14px; color:#666;'>No data is sent back to our servers using this tool</div><h2>Scanning links on <span style='color:#667eea'>${target}</span>...</h2><div id='current-page' style='margin:10px 0; padding:8px; background:#fff3cd; border-left:4px solid #ffc107; display:none;'></div><div id='scan-status'>Initializing scan...</div><div id='current-link' style='margin:10px 0; padding:8px; background:#e8f4fd; border-left:4px solid #667eea; display:none;'></div><div id='progress' style='margin:10px 0;'><div id='progress-bar' style='width:0%; height:20px; background:linear-gradient(90deg, #667eea, #764ba2); transition:width 0.3s ease;'></div></div><div id='stats' style='margin:10px 0; font-size:14px; color:#666;'>Links found: 0 | Checked: 0 | Cached: 0 | Working: 0 | Broken: 0</div><div id='cancel-section' style='text-align:center; margin:15px 0;'><button id='cancel-scan-btn' style='background:#dc3545; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold; display:none;'>🛑 Cancel Scan</button></div><div id='debug-output' style='margin-top:20px; padding:10px; background:#f5f5f5; font-family:monospace; font-size:12px; white-space:pre-wrap; max-height:200px; overflow-y:auto; display:none;'></div><div id='results-area' style='margin-top:20px; display:none;'><div id='results-summary' style='margin:10px 0; padding:10px; background:#f0f8ff; border-radius:5px;'></div><div id='results-list' style='max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:5px;'></div><div id='export-section' style='text-align:center; margin-top:20px; padding-top:20px; border-top:1px solid #ddd; display:none;'><button id='export-csv-btn' style='background:#667eea; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold;'>📊 Export Results as CSV</button></div><div id='back-link' style='text-align:center; margin-top:20px; padding-top:20px; border-top:1px solid #ddd; display:none;'><a href='https://devkit.free/tools/broken-link-checker/' target='_blank' style='color:#667eea; text-decoration:none; font-weight:bold;'>← Back to DevKit Broken Site Scanner</a></div></div>`;
+    document.body.innerHTML = `<div style='text-align:center; margin:20px 0;'><a href='https://devkit.free' target='_blank' style='text-decoration:none;'><img src='${chrome.runtime.getURL('devkit-logo.svg')}' alt='DevKit' style='max-width:200px; height:auto;'></a></div><div style='text-align:center; margin:10px 0; font-size:14px; color:#666;'>No data is sent back to our servers using this tool</div><h2>Scanning links on <span style='color:#667eea'>${target}</span>...</h2><div id='current-page' style='margin:10px 0; padding:8px; background:#fff3cd; border-left:4px solid #ffc107; display:none;'></div><div id='scan-status'>Initializing scan...</div><div id='current-link' style='margin:10px 0; padding:8px; background:#e8f4fd; border-left:4px solid #667eea; display:none;'></div><div id='progress' style='margin:10px 0;'><div id='progress-bar' style='width:0%; height:20px; background:linear-gradient(90deg, #667eea, #764ba2); transition:width 0.3s ease;'></div></div><div id='stats' style='margin:10px 0; font-size:14px; color:#666;'>Links found: 0 | Checked: 0 | Cached: 0 | Working: 0 | Broken: 0</div><div id='cancel-section' style='text-align:center; margin:15px 0;'><button id='cancel-scan-btn' style='background:#dc3545; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold; display:none;'>🛑 Cancel Scan</button></div><div id='broken-links-area' style='margin-top:20px; display:none;'><h3 style='color:#dc3545; font-size:16px; margin-bottom:10px;'>⚠️ Broken Links Found</h3><div id='broken-links-list' style='max-height:300px; overflow-y:auto; border:1px solid #ddd; border-radius:5px;'></div></div><div id='debug-output' style='margin-top:20px; padding:10px; background:#f5f5f5; font-family:monospace; font-size:12px; white-space:pre-wrap; max-height:200px; overflow-y:auto; display:none;'></div><div id='results-area' style='margin-top:20px; display:none;'><div id='results-summary' style='margin:10px 0; padding:10px; background:#f0f8ff; border-radius:5px;'></div><div id='results-list' style='max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:5px;'></div><div id='export-section' style='text-align:center; margin-top:20px; padding-top:20px; border-top:1px solid #ddd; display:none;'><button id='export-csv-btn' style='background:#667eea; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold;'>📊 Export Results as CSV</button></div><div id='back-link' style='text-align:center; margin-top:20px; padding-top:20px; border-top:1px solid #ddd; display:none;'><a href='https://devkit.free/tools/broken-link-checker/' target='_blank' style='color:#667eea; text-decoration:none; font-weight:bold;'>← Back to DevKit Broken Site Scanner</a></div></div>`;
 
     const debugOutput = document.getElementById('debug-output');
     const scanStatus = document.getElementById('scan-status');
@@ -27,6 +27,8 @@
     const statsDiv = document.getElementById('stats');
     const cancelSection = document.getElementById('cancel-section');
     const cancelScanBtn = document.getElementById('cancel-scan-btn');
+    const brokenLinksArea = document.getElementById('broken-links-area');
+    const brokenLinksList = document.getElementById('broken-links-list');
     const resultsArea = document.getElementById('results-area');
     const resultsSummary = document.getElementById('results-summary');
     const resultsList = document.getElementById('results-list');
@@ -42,6 +44,7 @@
     let cachedLinks = 0;
     let uniqueUrls = new Set(); // Track unique URLs discovered
     let allResults = []; // Store all link results for final display
+    let brokenLinksFound = []; // Store broken links found during scan for real-time display
 
     function logDebug(message, level = 'info') {
         if (debug === 'verbose') {
@@ -81,7 +84,52 @@
         statsDiv.textContent = `Unique links found: ${totalLinks} | Checked: ${checkedLinks} | Working: ${workingLinks} | Broken: ${brokenLinks}`;
     }
 
-    function updateLinkResult(url, status, isCached = false) {
+    function updateBrokenLinksTable() {
+        if (brokenLinksFound.length === 0) {
+            brokenLinksArea.style.display = 'none';
+            return;
+        }
+
+        // Show the broken links area
+        brokenLinksArea.style.display = 'block';
+
+        // Create the same table structure as the final results table
+        let html = `
+            <table style='width:100%; border-collapse:collapse; font-size:12px;'>
+                <thead>
+                    <tr style='background:#f0f0f0;'>
+                        <th style='border:1px solid #ddd; padding:8px; text-align:left; width:80px;'>Status</th>
+                        <th style='border:1px solid #ddd; padding:8px; text-align:left; width:50px;'>Type</th>
+                        <th style='border:1px solid #ddd; padding:8px; text-align:left;'>On Page</th>
+                        <th style='border:1px solid #ddd; padding:8px; text-align:left;'>URL</th>
+                        <th style='border:1px solid #ddd; padding:8px; text-align:left;'>Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        // Add each broken link as a row
+        brokenLinksFound.forEach(link => {
+            html += `
+                <tr>
+                    <td style='border:1px solid #ddd; padding:8px; color:#dc3545; font-weight:bold;'>✗ Broken</td>
+                    <td style='border:1px solid #ddd; padding:8px;'>${link.type || 'page'}</td>
+                    <td style='border:1px solid #ddd; padding:8px;'><a href='${link.foundOnPage}' target='_blank' style='color:#007bff; text-decoration:none;'>${link.foundOnPage}</a></td>
+                    <td style='border:1px solid #ddd; padding:8px;'><a href='${link.url}' target='_blank' style='color:#007bff; text-decoration:none;'>${link.url}</a></td>
+                    <td style='border:1px solid #ddd; padding:8px;'>${link.statusCode || 'N/A'}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        brokenLinksList.innerHTML = html;
+    }
+
+    function updateLinkResult(url, status, isCached = false, linkData = null) {
         if (isCached) {
             cachedLinks++;
         } else {
@@ -90,6 +138,11 @@
                 workingLinks++;
             } else if (status === 'broken') {
                 brokenLinks++;
+                // Add to broken links array for real-time display
+                if (linkData) {
+                    brokenLinksFound.push(linkData);
+                    updateBrokenLinksTable();
+                }
             }
         }
         updateStats();
@@ -99,6 +152,9 @@
     function displayFinalResults(links, pagesScanned = 0) {
         // Store all results
         allResults = links;
+        
+        // Hide the real-time broken links table
+        brokenLinksArea.style.display = 'none';
         
         // Show results area
         resultsArea.style.display = 'block';
@@ -306,6 +362,9 @@
     // Mark scan as in progress and show cancel button
     isScanning = true;
     showCancelButton(true);
+    
+    // Initialize the stats display
+    updateStats();
 
     // Listen for progress updates from background script
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -316,7 +375,15 @@
                 uniqueUrls.add(message.url); // Track unique URL
                 updateCurrentLink(message.url);
             } else if (message.type === 'result') {
-                updateLinkResult(message.url, message.status, false);
+                // Pass the full link data for broken links
+                const linkData = message.status === 'broken' ? {
+                    url: message.url,
+                    status: message.status,
+                    statusCode: message.statusCode,
+                    foundOnPage: message.foundOnPage,
+                    type: message.linkType || 'page'
+                } : null;
+                updateLinkResult(message.url, message.status, false, linkData);
             } else if (message.type === 'cached') {
                 uniqueUrls.add(message.url); // Track unique URL
                 updateLinkResult(message.url, message.status, true);
