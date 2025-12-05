@@ -3,6 +3,17 @@ class DevKitLinkChecker {
     constructor() {
         this.tabData = new Map(); // Store data per tab
         this.currentScanController = null; // Track current scan for cancellation
+        
+        // Sites known to return 403 for HEAD requests from extensions
+        this.sites403Prone = [
+            'twitter.com',
+            'x.com',
+            'facebook.com',
+            'linkedin.com',
+            'instagram.com',
+            't.co'
+        ];
+        
         this.setupMessageListeners();
         this.setupTabListeners();
     }
@@ -418,7 +429,10 @@ class DevKitLinkChecker {
                             action: 'scanProgress',
                             type: 'result',
                             url: link.url,
-                            status: result.status
+                            status: result.status,
+                            statusCode: result.statusCode,
+                            foundOnPage: link.foundOnPage,
+                            linkType: link.type
                         });
                     }
                 });
@@ -490,6 +504,30 @@ class DevKitLinkChecker {
         try {
             if (debug === 'verbose') console.log(`[DEBUG] Trying HEAD request for ${url}`);
             const headResult = await this.fetchWithTimeout(url, { method: 'HEAD' }, debug);
+            
+            // If HEAD returns 403, try GET request before marking as broken
+            if (headResult.status === 403) {
+                if (debug === 'verbose') console.log(`[DEBUG] HEAD returned 403, trying GET for ${url}`);
+                try {
+                    const getResult = await this.fetchWithTimeout(url, { method: 'GET' }, debug);
+                    const result = {
+                        working: getResult.ok,
+                        statusCode: getResult.status,
+                        error: getResult.ok ? null : `HTTP ${getResult.status}`
+                    };
+                    if (debug === 'verbose') console.log(`[DEBUG] GET result after 403: ${result.working} (${result.statusCode})`);
+                    return result;
+                } catch (getError) {
+                    if (debug === 'verbose') console.log(`[DEBUG] GET failed after 403: ${getError.message}`);
+                    // Return the original 403 result
+                    return {
+                        working: false,
+                        statusCode: 403,
+                        error: 'HTTP 403'
+                    };
+                }
+            }
+            
             const result = {
                 working: headResult.ok,
                 statusCode: headResult.status,
