@@ -16,7 +16,7 @@
     "*://*/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "content_scripts": [
     {
@@ -49,8 +49,8 @@
     "gecko": {
       "id": "devkit-link-checker@devkit.free",
       "strict_min_version": "109.0",
-      "background": {
-        "scripts": ["background.js"]
+      "data_collection_permissions": {
+        "required": ["none"]
       }
     }
   }
